@@ -1,3 +1,8 @@
 module.exports = {
-  plugins: [require("autoprefixer"), require("postcss-import")]
+  plugins: {
+    "postcss-import": {},
+    tailwindcss: {},
+    autoprefixer: {},
+    ...(process.env.NODE_ENV === "production" ? { cssnano: {} } : {})
+  }
 };

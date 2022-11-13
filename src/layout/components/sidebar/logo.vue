@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { getCurrentInstance } from "vue";
+import { useNav } from "@/layout/hooks/useNav";
+
 const props = defineProps({
   collapse: Boolean
 });
 
-const title =
-  getCurrentInstance().appContext.config.globalProperties.$config?.Title;
+const { title } = useNav();
 </script>
 
 <template>
-  <div class="sidebar-logo-container" :class="{ collapse: props.collapse }">
+  <div class="sidebar-logo-container" :class="{ collapses: props.collapse }">
     <transition name="sidebarLogoFade">
       <router-link
         v-if="props.collapse"
@@ -51,6 +51,12 @@ const title =
     margin-top: 5px;
 
     .sidebar-title {
+      display: block;
+      width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: left;
       color: #1890ff;
       font-weight: 600;
       font-size: 20px;
@@ -59,7 +65,7 @@ const title =
     }
   }
 
-  .collapse {
+  .collapses {
     .sidebar-logo {
       margin-right: 0;
     }

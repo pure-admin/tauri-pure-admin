@@ -1,31 +1,33 @@
 <script setup lang="ts">
 import Logo from "./logo.vue";
-import { emitter } from "/@/utils/mitt";
-import { useNav } from "../../hooks/nav";
+import { useRoute } from "vue-router";
+import { emitter } from "@/utils/mitt";
 import SidebarItem from "./sidebarItem.vue";
-import { storageLocal } from "/@/utils/storage";
-import { useRoute, useRouter } from "vue-router";
+import leftCollapse from "./leftCollapse.vue";
+import type { StorageConfigs } from "/#/index";
+import { useNav } from "@/layout/hooks/useNav";
+import { storageLocal } from "@pureadmin/utils";
 import { ref, computed, watch, onBeforeMount } from "vue";
-import { findRouteByPath, getParentPaths } from "/@/router/utils";
-import { usePermissionStoreHook } from "/@/store/modules/permission";
+import { findRouteByPath, getParentPaths } from "@/router/utils";
+import { usePermissionStoreHook } from "@/store/modules/permission";
 
 const route = useRoute();
-const routers = useRouter().options.routes;
 const showLogo = ref(
-  storageLocal.getItem("responsive-configure")?.showLogo ?? true
+  storageLocal.getItem<StorageConfigs>("responsive-configure")?.showLogo ?? true
 );
 
-const { pureApp, isCollapse, menuSelect } = useNav();
+const { routers, device, pureApp, isCollapse, menuSelect, toggleSideBar } =
+  useNav();
 
-let subMenuData = ref([]);
+const subMenuData = ref([]);
 
 const menuData = computed(() => {
-  return pureApp.layout === "mix"
+  return pureApp.layout === "mix" && device.value !== "mobile"
     ? subMenuData.value
     : usePermissionStoreHook().wholeMenus;
 });
 
-function getSubMenuData(path) {
+function getSubMenuData(path: string) {
   // path的上级路由组成的数组
   const parentPathArr = getParentPaths(
     path,
@@ -39,6 +41,7 @@ function getSubMenuData(path) {
   if (!parenetRoute?.children) return;
   subMenuData.value = parenetRoute?.children;
 }
+
 getSubMenuData(route.path);
 
 onBeforeMount(() => {
@@ -48,7 +51,7 @@ onBeforeMount(() => {
 });
 
 watch(
-  () => route.path,
+  () => [route.path, usePermissionStoreHook().wholeMenus],
   () => {
     getSubMenuData(route.path);
     menuSelect(route.path, routers);
@@ -59,25 +62,33 @@ watch(
 <template>
   <div :class="['sidebar-container', showLogo ? 'has-logo' : '']">
     <Logo v-if="showLogo" :collapse="isCollapse" />
-    <el-scrollbar wrap-class="scrollbar-wrapper">
+    <el-scrollbar
+      wrap-class="scrollbar-wrapper"
+      :class="[device === 'mobile' ? 'mobile' : 'pc']"
+    >
       <el-menu
-        :default-active="route.path"
-        :collapse="isCollapse"
-        unique-opened
         router
-        :collapse-transition="false"
+        unique-opened
         mode="vertical"
-        class="outer-most"
+        class="outer-most select-none"
+        :collapse="isCollapse"
+        :default-active="route.path"
+        :collapse-transition="false"
         @select="indexPath => menuSelect(indexPath, routers)"
       >
         <sidebar-item
           v-for="routes in menuData"
           :key="routes.path"
           :item="routes"
-          class="outer-most"
           :base-path="routes.path"
+          class="outer-most select-none"
         />
       </el-menu>
     </el-scrollbar>
+    <leftCollapse
+      v-if="device !== 'mobile'"
+      :is-active="pureApp.sidebar.opened"
+      @toggleClick="toggleSideBar"
+    />
   </div>
 </template>

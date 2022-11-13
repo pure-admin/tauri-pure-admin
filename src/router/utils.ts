@@ -7,25 +7,32 @@ import {
   RouteRecordNormalized
 } from "vue-router";
 import { router } from "./index";
+import { isProxy, toRaw } from "vue";
 import { loadEnv } from "../../build";
 import { useTimeoutFn } from "@vueuse/core";
-import { RouteConfigs } from "/@/layout/types";
-import { buildHierarchyTree } from "/@/utils/tree";
-import { usePermissionStoreHook } from "/@/store/modules/permission";
-const Layout = () => import("/@/layout/index.vue");
-const IFrame = () => import("/@/layout/frameView.vue");
+import { RouteConfigs } from "@/layout/types";
+import {
+  isString,
+  storageSession,
+  buildHierarchyTree,
+  isIncludeAllChildren
+} from "@pureadmin/utils";
+import { cloneDeep, intersection } from "lodash-unified";
+import { sessionKey, type DataInfo } from "@/utils/auth";
+import { usePermissionStoreHook } from "@/store/modules/permission";
+const IFrame = () => import("@/layout/frameView.vue");
 // https://cn.vitejs.dev/guide/features.html#glob-import
 const modulesRoutes = import.meta.glob("/src/views/**/*.{vue,tsx}");
 
 // 动态路由
-import { getAsyncRoutes } from "/@/api/routes";
+import { getAsyncRoutes } from "@/api/routes";
 
-// 按照路由中meta下的rank等级升序来排序路由
+/** 按照路由中meta下的rank等级升序来排序路由 */
 function ascending(arr: any[]) {
   arr.forEach(v => {
     if (v?.meta?.rank === null) v.meta.rank = undefined;
     if (v?.meta?.rank === 0) {
-      if (v.name !== "home" && v.path !== "/") {
+      if (v.name !== "Home" && v.path !== "/") {
         console.warn("rank only the home page can be 0");
       }
     }
@@ -37,9 +44,9 @@ function ascending(arr: any[]) {
   );
 }
 
-// 过滤meta中showLink为false的路由
+/** 过滤meta中showLink为false的菜单 */
 function filterTree(data: RouteComponent[]) {
-  const newTree = data.filter(
+  const newTree = cloneDeep(data).filter(
     (v: { meta: { showLink: boolean } }) => v.meta?.showLink !== false
   );
   newTree.forEach(
@@ -48,7 +55,38 @@ function filterTree(data: RouteComponent[]) {
   return newTree;
 }
 
-// 批量删除缓存路由(keepalive)
+/** 过滤children长度为0的的目录，当目录下没有菜单时，会过滤此目录，目录没有赋予roles权限，当目录下只要有一个菜单有显示权限，那么此目录就会显示 */
+function filterChildrenTree(data: RouteComponent[]) {
+  const newTree = cloneDeep(data).filter((v: any) => v?.children?.length !== 0);
+  newTree.forEach(
+    (v: { children }) => v.children && (v.children = filterTree(v.children))
+  );
+  return newTree;
+}
+
+/** 判断两个数组彼此是否存在相同值 */
+function isOneOfArray(a: Array<string>, b: Array<string>) {
+  return Array.isArray(a) && Array.isArray(b)
+    ? intersection(a, b).length > 0
+      ? true
+      : false
+    : true;
+}
+
+/** 从sessionStorage里取出当前登陆用户的角色roles，过滤无权限的菜单 */
+function filterNoPermissionTree(data: RouteComponent[]) {
+  const currentRoles =
+    storageSession.getItem<DataInfo<number>>(sessionKey).roles ?? [];
+  const newTree = cloneDeep(data).filter((v: any) =>
+    isOneOfArray(v.meta?.roles, currentRoles)
+  );
+  newTree.forEach(
+    (v: any) => v.children && (v.children = filterNoPermissionTree(v.children))
+  );
+  return filterChildrenTree(newTree);
+}
+
+/** 批量删除缓存路由(keepalive) */
 function delAliveRoutes(delAliveRouteList: Array<RouteConfigs>) {
   delAliveRouteList.forEach(route => {
     usePermissionStoreHook().cacheOperate({
@@ -58,7 +96,7 @@ function delAliveRoutes(delAliveRouteList: Array<RouteConfigs>) {
   });
 }
 
-// 通过path获取父级路径
+/** 通过path获取父级路径 */
 function getParentPaths(path: string, routes: RouteRecordRaw[]) {
   // 深度遍历查找
   function dfs(routes: RouteRecordRaw[], path: string, parents: string[]) {
@@ -82,11 +120,11 @@ function getParentPaths(path: string, routes: RouteRecordRaw[]) {
   return dfs(routes, path, []);
 }
 
-// 查找对应path的路由信息
+/** 查找对应path的路由信息 */
 function findRouteByPath(path: string, routes: RouteRecordRaw[]) {
   let res = routes.find((item: { path: string }) => item.path == path);
   if (res) {
-    return res;
+    return isProxy(res) ? toRaw(res) : res;
   } else {
     for (let i = 0; i < routes.length; i++) {
       if (
@@ -95,7 +133,7 @@ function findRouteByPath(path: string, routes: RouteRecordRaw[]) {
       ) {
         res = findRouteByPath(path, routes[i].children);
         if (res) {
-          return res;
+          return isProxy(res) ? toRaw(res) : res;
         }
       }
     }
@@ -103,24 +141,25 @@ function findRouteByPath(path: string, routes: RouteRecordRaw[]) {
   }
 }
 
-// 重置路由
-function resetRouter(): void {
-  router.getRoutes().forEach(route => {
-    const { name } = route;
-    if (name) {
-      router.hasRoute(name) && router.removeRoute(name);
-    }
-  });
+function addPathMatch() {
+  if (!router.hasRoute("pathMatch")) {
+    router.addRoute({
+      path: "/:pathMatch(.*)",
+      name: "pathMatch",
+      redirect: "/error/404"
+    });
+  }
 }
 
-// 初始化路由
-function initRouter(name: string) {
+/** 初始化路由 */
+function initRouter() {
   return new Promise(resolve => {
-    getAsyncRoutes({ name }).then(({ info }) => {
-      if (info.length === 0) {
-        usePermissionStoreHook().changeSetting(info);
+    getAsyncRoutes().then(({ data }) => {
+      if (data.length === 0) {
+        usePermissionStoreHook().handleWholeMenus(data);
+        resolve(router);
       } else {
-        formatFlatteningRoutes(addAsyncRoutes(info)).map(
+        formatFlatteningRoutes(addAsyncRoutes(data)).map(
           (v: RouteRecordRaw) => {
             // 防止重复添加路由
             if (
@@ -135,7 +174,7 @@ function initRouter(name: string) {
               // 最终路由进行升序
               ascending(router.options.routes[0].children);
               if (!router.hasRoute(v?.name)) router.addRoute(v);
-              const flattenRouters = router
+              const flattenRouters: any = router
                 .getRoutes()
                 .find(n => n.path === "/");
               router.addRoute(flattenRouters);
@@ -143,12 +182,9 @@ function initRouter(name: string) {
             resolve(router);
           }
         );
-        usePermissionStoreHook().changeSetting(info);
+        usePermissionStoreHook().handleWholeMenus(data);
       }
-      router.addRoute({
-        path: "/:pathMatch(.*)",
-        redirect: "/error/404"
-      });
+      addPathMatch();
     });
   });
 }
@@ -197,7 +233,7 @@ function formatTwoStageRoutes(routesList: RouteRecordRaw[]) {
   return newRoutesList;
 }
 
-// 处理缓存路由（添加、删除、刷新）
+/** 处理缓存路由（添加、删除、刷新） */
 function handleAliveRoute(matched: RouteRecordNormalized[], mode?: string) {
   switch (mode) {
     case "add":
@@ -224,31 +260,36 @@ function handleAliveRoute(matched: RouteRecordNormalized[], mode?: string) {
   }
 }
 
-// 过滤后端传来的动态路由 重新生成规范路由
+/** 过滤后端传来的动态路由 重新生成规范路由 */
 function addAsyncRoutes(arrRoutes: Array<RouteRecordRaw>) {
   if (!arrRoutes || !arrRoutes.length) return;
   const modulesRoutesKeys = Object.keys(modulesRoutes);
   arrRoutes.forEach((v: RouteRecordRaw) => {
-    if (v.redirect) {
-      v.component = Layout;
-    } else if (v.meta?.frameSrc) {
+    // 将backstage属性加入meta，标识此路由为后端返回路由
+    v.meta.backstage = true;
+    // 父级的redirect属性取值：如果子级存在且父级的redirect属性不存在，默认取第一个子级的path；如果子级存在且父级的redirect属性存在，取存在的redirect属性，会覆盖默认值
+    if (v?.children && v.children.length && !v.redirect)
+      v.redirect = v.children[0].path;
+    // 父级的name属性取值：如果子级存在且父级的name属性不存在，默认取第一个子级的name；如果子级存在且父级的name属性存在，取存在的name属性，会覆盖默认值（注意：测试中发现父级的name不能和子级name重复，如果重复会造成重定向无效（跳转404），所以这里给父级的name起名的时候后面会自动加上`Parent`，避免重复）
+    if (v?.children && v.children.length && !v.name)
+      v.name = (v.children[0].name as string) + "Parent";
+    if (v.meta?.frameSrc) {
       v.component = IFrame;
     } else {
-      // 对后端传component组件路径和不传做兼容（如果后端传component组件路径，那么path可以随便写，如果不传，component组件路径会根path保持一致）
+      // 对后端传component组件路径和不传做兼容（如果后端传component组件路径，那么path可以随便写，如果不传，component组件路径会跟path保持一致）
       const index = v?.component
-        ? // @ts-expect-error
-          modulesRoutesKeys.findIndex(ev => ev.includes(v.component))
+        ? modulesRoutesKeys.findIndex(ev => ev.includes(v.component as any))
         : modulesRoutesKeys.findIndex(ev => ev.includes(v.path));
       v.component = modulesRoutes[modulesRoutesKeys[index]];
     }
-    if (v.children) {
+    if (v?.children && v.children.length) {
       addAsyncRoutes(v.children);
     }
   });
   return arrRoutes;
 }
 
-// 获取路由历史模式 https://next.router.vuejs.org/zh/guide/essentials/history-mode.html
+/** 获取路由历史模式 https://next.router.vuejs.org/zh/guide/essentials/history-mode.html */
 function getHistoryMode(): RouterHistory {
   const routerHistory = loadEnv().VITE_ROUTER_HISTORY;
   // len为1 代表只有历史模式 为2 代表历史模式中存在base参数 https://next.router.vuejs.org/zh/api/#%E5%8F%82%E6%95%B0-1
@@ -272,31 +313,29 @@ function getHistoryMode(): RouterHistory {
   }
 }
 
-// 是否有权限
-function hasPermissions(value: Array<string>): boolean {
-  if (value && value instanceof Array && value.length > 0) {
-    const roles = usePermissionStoreHook().buttonAuth;
-    const permissionRoles = value;
+/** 获取当前页面按钮级别的权限 */
+function getAuths(): Array<string> {
+  return router.currentRoute.value.meta.auths as Array<string>;
+}
 
-    const hasPermission = roles.some(role => {
-      return permissionRoles.includes(role);
-    });
-
-    if (!hasPermission) {
-      return false;
-    }
-    return true;
-  } else {
-    return false;
-  }
+/** 是否有按钮级别的权限 */
+function hasAuth(value: string | Array<string>): boolean {
+  if (!value) return false;
+  /** 从当前路由的`meta`字段里获取按钮级别的所有自定义`code`值 */
+  const metaAuths = getAuths();
+  const isAuths = isString(value)
+    ? metaAuths.includes(value)
+    : isIncludeAllChildren(value, metaAuths);
+  return isAuths ? true : false;
 }
 
 export {
+  hasAuth,
+  getAuths,
   ascending,
   filterTree,
   initRouter,
-  resetRouter,
-  hasPermissions,
+  isOneOfArray,
   getHistoryMode,
   addAsyncRoutes,
   delAliveRoutes,
@@ -304,5 +343,6 @@ export {
   findRouteByPath,
   handleAliveRoute,
   formatTwoStageRoutes,
-  formatFlatteningRoutes
+  formatFlatteningRoutes,
+  filterNoPermissionTree
 };

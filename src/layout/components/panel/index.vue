@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { onClickOutside } from "@vueuse/core";
-import { emitter } from "/@/utils/mitt";
+import { emitter } from "@/utils/mitt";
 
-let show = ref<Boolean>(false);
+const show = ref<Boolean>(false);
 const target = ref(null);
-onClickOutside(target, event => {
+onClickOutside(target, (event: any) => {
   if (event.clientX > target.value.offsetLeft) return;
   show.value = false;
 });
@@ -18,15 +18,21 @@ emitter.on("openPanel", () => {
 <template>
   <div :class="{ show: show }" class="right-panel-container">
     <div class="right-panel-background" />
-    <div ref="target" class="right-panel">
+    <div ref="target" class="right-panel bg-bg_color">
       <div class="right-panel-items">
         <div class="project-configuration">
-          <h3>项目配置</h3>
-          <el-icon title="关闭配置" class="el-icon-close" @click="show = !show">
-            <IconifyIconOffline icon="close" />
-          </el-icon>
+          <h3 class="dark:text-white">项目配置</h3>
+          <span title="关闭配置">
+            <IconifyIconOffline
+              class="dark:text-white"
+              icon="close"
+              @click="show = !show"
+            />
+          </span>
         </div>
-        <div style="border-bottom: 1px solid #dcdfe6" />
+        <div
+          class="border-b-[1px] border-solid border-[#dcdfe6] dark:border-[#303030]"
+        />
         <slot />
       </div>
     </div>
@@ -62,7 +68,7 @@ emitter.on("openPanel", () => {
   box-shadow: 0 0 15px 0 rgba(0, 0, 0, 0.05);
   transition: all 0.25s cubic-bezier(0.7, 0.3, 0.1, 1);
   transform: translate(100%);
-  background: #fff;
+  // background: #fff;
   z-index: 40000;
 }
 
@@ -119,7 +125,7 @@ emitter.on("openPanel", () => {
   top: 15px;
   margin-left: 10px;
 
-  i {
+  svg {
     font-size: 20px;
     margin-right: 20px;
 

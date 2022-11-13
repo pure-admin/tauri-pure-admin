@@ -1,58 +1,49 @@
-// 根据角色动态生成路由
+// 模拟后端动态生成路由
 import { MockMethod } from "vite-plugin-mock";
+
+/**
+ * roles：页面级别权限，这里模拟二种 "admin"、"common"
+ * admin：管理员角色
+ * common：普通角色
+ */
 
 const permissionRouter = {
   path: "/permission",
-  redirect: "/permission/page/index",
   meta: {
-    title: "menus.permission",
+    title: "权限管理",
     icon: "lollipop",
-    i18n: true,
-    rank: 7
+    rank: 10
   },
   children: [
     {
       path: "/permission/page/index",
-      name: "permissionPage",
+      name: "PermissionPage",
       meta: {
-        title: "menus.permissionPage",
-        i18n: true
+        title: "页面权限",
+        roles: ["admin", "common"]
       }
     },
     {
       path: "/permission/button/index",
-      name: "permissionButton",
+      name: "PermissionButton",
       meta: {
-        title: "menus.permissionButton",
-        i18n: true,
-        authority: []
+        title: "按钮权限",
+        roles: ["admin", "common"],
+        auths: ["btn_add", "btn_edit", "btn_delete"]
       }
     }
   ]
 };
 
-// 添加不同按钮权限到/permission/button页面中
-function setDifAuthority(authority, routes) {
-  routes.children[1].meta.authority = [authority];
-  return routes;
-}
-
 export default [
   {
     url: "/getAsyncRoutes",
     method: "get",
-    response: ({ query }) => {
-      if (query.name === "admin") {
-        return {
-          code: 0,
-          info: [setDifAuthority("v-admin", permissionRouter)]
-        };
-      } else {
-        return {
-          code: 0,
-          info: [setDifAuthority("v-test", permissionRouter)]
-        };
-      }
+    response: () => {
+      return {
+        success: true,
+        data: [permissionRouter]
+      };
     }
   }
 ] as MockMethod[];

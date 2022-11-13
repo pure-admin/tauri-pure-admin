@@ -1,59 +1,59 @@
-import { isUrl } from "/@/utils/is";
-import { getConfig } from "/@/config";
+import { getConfig } from "@/config";
 import { toRouteType } from "./types";
-import { openLink } from "/@/utils/link";
-import NProgress from "/@/utils/progress";
+import NProgress from "@/utils/progress";
 import { findIndex } from "lodash-unified";
-import { transformI18n } from "/@/plugins/i18n";
-import { storageSession } from "/@/utils/storage";
-import { buildHierarchyTree } from "/@/utils/tree";
-import { useMultiTagsStoreHook } from "/@/store/modules/multiTags";
-import { usePermissionStoreHook } from "/@/store/modules/permission";
+import { sessionKey, type DataInfo } from "@/utils/auth";
+import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
+import { usePermissionStoreHook } from "@/store/modules/permission";
 import {
   Router,
-  RouteMeta,
   createRouter,
   RouteRecordRaw,
-  RouteComponent,
-  RouteRecordName
+  RouteComponent
 } from "vue-router";
 import {
   ascending,
   initRouter,
+  isOneOfArray,
   getHistoryMode,
-  getParentPaths,
   findRouteByPath,
   handleAliveRoute,
   formatTwoStageRoutes,
   formatFlatteningRoutes
 } from "./utils";
+import {
+  buildHierarchyTree,
+  openLink,
+  isUrl,
+  storageSession
+} from "@pureadmin/utils";
 
 import homeRouter from "./modules/home";
 import errorRouter from "./modules/error";
 import remainingRouter from "./modules/remaining";
 
-// 原始静态路由（未做任何处理）
+/** 原始静态路由（未做任何处理） */
 const routes = [homeRouter, errorRouter];
 
-// 导出处理后的静态路由（三级及以上的路由全部拍成二级）
+/** 导出处理后的静态路由（三级及以上的路由全部拍成二级） */
 export const constantRoutes: Array<RouteRecordRaw> = formatTwoStageRoutes(
   formatFlatteningRoutes(buildHierarchyTree(ascending(routes)))
 );
 
-// 用于渲染菜单，保持原始层级
+/** 用于渲染菜单，保持原始层级 */
 export const constantMenus: Array<RouteComponent> = ascending(routes).concat(
   ...remainingRouter
 );
 
-// 不参与菜单的路由
+/** 不参与菜单的路由 */
 export const remainingPaths = Object.keys(remainingRouter).map(v => {
   return remainingRouter[v].path;
 });
 
-// 创建路由实例
+/** 创建路由实例 */
 export const router: Router = createRouter({
   history: getHistoryMode(),
-  routes: constantRoutes.concat(...remainingRouter),
+  routes: constantRoutes.concat(...(remainingRouter as any)),
   strict: true,
   scrollBehavior(to, from, savedPosition) {
     return new Promise(resolve => {
@@ -70,7 +70,21 @@ export const router: Router = createRouter({
   }
 });
 
-// 路由白名单
+/** 重置路由 */
+export function resetRouter() {
+  router.getRoutes().forEach(route => {
+    const { name, meta } = route;
+    if (name && router.hasRoute(name) && meta?.backstage) {
+      router.removeRoute(name);
+      router.options.routes = formatTwoStageRoutes(
+        formatFlatteningRoutes(buildHierarchyTree(ascending(routes)))
+      );
+    }
+  });
+  usePermissionStoreHook().clearAllCachePage();
+}
+
+/** 路由白名单 */
 const whiteList = ["/login"];
 
 router.beforeEach((to: toRouteType, _from, next) => {
@@ -78,106 +92,67 @@ router.beforeEach((to: toRouteType, _from, next) => {
     const newMatched = to.matched;
     handleAliveRoute(newMatched, "add");
     // 页面整体刷新和点击标签页刷新
-    if (_from.name === undefined || _from.name === "redirect") {
+    if (_from.name === undefined || _from.name === "Redirect") {
       handleAliveRoute(newMatched);
     }
   }
-  const name = storageSession.getItem("info");
+  const userInfo = storageSession.getItem<DataInfo<number>>(sessionKey);
   NProgress.start();
-  const externalLink = isUrl(to?.name);
-  if (!externalLink)
+  const externalLink = isUrl(to?.name as string);
+  if (!externalLink) {
     to.matched.some(item => {
       if (!item.meta.title) return "";
       const Title = getConfig().Title;
-      if (Title)
-        document.title = `${transformI18n(
-          item.meta.title,
-          item.meta?.i18n
-        )} | ${Title}`;
-      else document.title = transformI18n(item.meta.title, item.meta?.i18n);
+      if (Title) document.title = `${item.meta.title} | ${Title}`;
+      else document.title = item.meta.title as string;
     });
-  if (name) {
+  }
+  /** 如果已经登录并存在登录信息后不能跳转到路由白名单，而是继续保持在当前页面 */
+  function toCorrectRoute() {
+    whiteList.includes(to.fullPath) ? next(_from.fullPath) : next();
+  }
+  if (userInfo) {
+    // 无权限跳转403页面
+    if (to.meta?.roles && !isOneOfArray(to.meta?.roles, userInfo?.roles)) {
+      next({ path: "/error/403" });
+    }
     if (_from?.name) {
       // name为超链接
       if (externalLink) {
-        openLink(to?.name);
+        openLink(to?.name as string);
         NProgress.done();
       } else {
-        next();
+        toCorrectRoute();
       }
     } else {
       // 刷新
-      if (usePermissionStoreHook().wholeMenus.length === 0)
-        initRouter(name.username).then((router: Router) => {
+      if (
+        usePermissionStoreHook().wholeMenus.length === 0 &&
+        to.path !== "/login"
+      )
+        initRouter().then((router: Router) => {
           if (!useMultiTagsStoreHook().getMultiTagsCache) {
-            const handTag = (
-              path: string,
-              parentPath: string,
-              name: RouteRecordName,
-              meta: RouteMeta
-            ): void => {
+            const { path } = to;
+            const index = findIndex(remainingRouter, v => {
+              return v.path == path;
+            });
+            const routes: any =
+              index === -1
+                ? router.options.routes[0].children
+                : router.options.routes;
+            const route = findRouteByPath(path, routes);
+            // query、params模式路由传参数的标签页不在此处处理
+            if (route && route.meta?.title) {
               useMultiTagsStoreHook().handleTags("push", {
-                path,
-                parentPath,
-                name,
-                meta
+                path: route.path,
+                name: route.name,
+                meta: route.meta
               });
-            };
-            // 未开启标签页缓存，刷新页面重定向到顶级路由（参考标签页操作例子，只针对静态路由）
-            if (to.meta?.refreshRedirect) {
-              const routes = router.options.routes;
-              const { refreshRedirect } = to.meta;
-              const { name, meta } = findRouteByPath(refreshRedirect, routes);
-              handTag(
-                refreshRedirect,
-                getParentPaths(refreshRedirect, routes)[1],
-                name,
-                meta
-              );
-              return router.push(refreshRedirect);
-            } else {
-              const { path } = to;
-              const index = findIndex(remainingRouter, v => {
-                return v.path == path;
-              });
-              const routes =
-                index === -1
-                  ? router.options.routes[0].children
-                  : router.options.routes;
-              const route = findRouteByPath(path, routes);
-              const routePartent = getParentPaths(path, routes);
-              // 未开启标签页缓存，刷新页面重定向到顶级路由（参考标签页操作例子，只针对动态路由）
-              if (
-                path !== routes[0].path &&
-                route?.meta?.rank !== 0 &&
-                routePartent.length === 0
-              ) {
-                if (!route?.meta?.refreshRedirect) return;
-                const { name, meta } = findRouteByPath(
-                  route.meta.refreshRedirect,
-                  routes
-                );
-                handTag(
-                  route.meta?.refreshRedirect,
-                  getParentPaths(route.meta?.refreshRedirect, routes)[0],
-                  name,
-                  meta
-                );
-                return router.push(route.meta?.refreshRedirect);
-              } else {
-                handTag(
-                  route.path,
-                  routePartent[routePartent.length - 1],
-                  route.name,
-                  route.meta
-                );
-                return router.push(path);
-              }
             }
           }
           router.push(to.fullPath);
         });
-      next();
+      toCorrectRoute();
     }
   } else {
     if (to.path !== "/login") {

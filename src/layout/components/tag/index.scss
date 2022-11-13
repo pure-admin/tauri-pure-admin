@@ -43,7 +43,7 @@
   font-size: 14px;
   display: flex;
   align-items: center;
-  color: var(--el-text-color-regular);
+  color: var(--el-text-color-primary);
   background: #fff;
   position: relative;
   box-shadow: 0 0 1px #888;
@@ -92,7 +92,7 @@
 
   a {
     text-decoration: none;
-    color: #666;
+    color: var(--el-text-color-primary);
     padding: 0 4px;
   }
 
@@ -121,21 +121,6 @@
     }
   }
 
-  .right-button {
-    display: flex;
-    font-size: 16px;
-
-    li {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 40px;
-      height: 38px;
-      border-right: 1px solid #ccc;
-      cursor: pointer;
-    }
-  }
-
   /* 右键菜单 */
   .contextmenu {
     margin: 0;
@@ -144,7 +129,7 @@
     list-style-type: none;
     padding: 5px 0;
     border-radius: 4px;
-    color: #000000d9;
+    color: var(--el-text-color-primary);
     font-weight: normal;
     font-size: 13px;
     white-space: nowrap;
@@ -160,7 +145,7 @@
       align-items: center;
 
       &:hover {
-        background: var(--el-color-primary-light-9);
+        // background: var(--el-color-primary-light-9);
         color: var(--el-color-primary);
       }
 
@@ -173,8 +158,6 @@
 }
 
 .el-dropdown-menu {
-  padding: 0;
-
   li {
     width: 100%;
     margin: 0;
@@ -198,6 +181,9 @@
   margin-right: 10px;
 }
 
+:deep(.el-dropdown-menu__item--divided) {
+  margin: 1px 0;
+}
 .el-dropdown-menu__item--divided::before {
   margin: 0;
 }
@@ -207,7 +193,7 @@
 }
 
 .scroll-item.is-active {
-  background-color: var(--el-color-primary-light-9);
+  // background-color: var(--el-color-primary-light-9);
   position: relative;
   color: #fff;
 
@@ -220,15 +206,16 @@
   }
 
   a {
-    color: var(--el-color-primary);
+    color: var(--el-color-primary) !important;
   }
 }
 
 .arrow-left,
-.arrow-right {
+.arrow-right,
+.arrow-down {
   width: 40px;
   height: 38px;
-  color: #00000073;
+  color: var(--el-text-color-primary);
   position: relative;
 
   svg {
@@ -250,7 +237,7 @@
 
 .arrow-right {
   box-shadow: -5px 0 5px -6px #ccc;
-  border-right: 1px solid #ccc;
+  border-right: 0.5px solid #ccc;
 
   &:hover {
     cursor: e-resize;
@@ -306,9 +293,4 @@
   bottom: 0;
   background: var(--el-color-primary);
   animation: scheduleOutWidth 400ms ease-in;
-}
-
-/* 刷新按钮动画效果 */
-.refresh-button {
-  animation: rotate 600ms linear infinite;
 }

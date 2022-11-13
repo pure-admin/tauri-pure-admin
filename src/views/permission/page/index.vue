@@ -1,51 +1,64 @@
-<script lang="ts">
-export default {
-  name: "permissionPage"
-};
-</script>
-
 <script setup lang="ts">
-import { ref, unref } from "vue";
-import { storageSession } from "/@/utils/storage";
-import { useRenderIcon } from "/@/components/ReIcon/src/hooks";
+import { initRouter } from "@/router/utils";
+import { type CSSProperties, ref, computed } from "vue";
+import { useUserStoreHook } from "@/store/modules/user";
+import { usePermissionStoreHook } from "@/store/modules/permission";
 
-let purview = ref<string>(storageSession.getItem("info").username);
+defineOptions({
+  name: "PermissionPage"
+});
 
-function changRole() {
-  if (unref(purview) === "admin") {
-    storageSession.setItem("info", {
-      username: "test",
-      accessToken: "eyJhbGciOiJIUzUxMiJ9.test"
-    });
-    window.location.reload();
-  } else {
-    storageSession.setItem("info", {
-      username: "admin",
-      accessToken: "eyJhbGciOiJIUzUxMiJ9.admin"
-    });
-    window.location.reload();
+const elStyle = computed((): CSSProperties => {
+  return {
+    width: "85vw",
+    justifyContent: "start"
+  };
+});
+
+const username = ref(useUserStoreHook()?.username);
+
+const options = [
+  {
+    value: "admin",
+    label: "管理员角色"
+  },
+  {
+    value: "common",
+    label: "普通角色"
   }
+];
+
+function onChange() {
+  useUserStoreHook()
+    .loginByUsername({ username: username.value, password: "admin123" })
+    .then(res => {
+      if (res.success) {
+        usePermissionStoreHook().clearAllCachePage();
+        initRouter();
+      }
+    });
 }
 </script>
 
 <template>
-  <el-card>
-    <template #header>
-      <div class="card-header">
-        <span>
-          当前角色：
-          <span style="font-size: 26px">{{ purview }}</span>
-          <p style="color: #ffa500">
-            查看左侧菜单变化(系统管理)，模拟后台根据不同角色返回对应路由
-          </p></span
-        >
-      </div>
-    </template>
-    <el-button
-      type="primary"
-      @click="changRole"
-      :icon="useRenderIcon('user', { color: '#fff' })"
-      >切换角色</el-button
-    >
-  </el-card>
+  <el-space direction="vertical" size="large">
+    <el-tag :style="elStyle" size="large" effect="dark">
+      模拟后台根据不同角色返回对应路由（具体参考完整版pure-admin代码）
+    </el-tag>
+    <el-card shadow="never" :style="elStyle">
+      <template #header>
+        <div class="card-header">
+          <span>当前角色：{{ username }}</span>
+        </div>
+      </template>
+      <el-select v-model="username" @change="onChange">
+        <el-option
+          v-for="item in options"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
+        />
+      </el-select>
+    </el-card>
+  </el-space>
 </template>

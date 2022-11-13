@@ -1,98 +1,79 @@
 <script setup lang="ts">
 import {
-  reactive,
   ref,
   unref,
   watch,
+  reactive,
   computed,
   nextTick,
-  useCssModule,
-  getCurrentInstance
+  useCssModule
 } from "vue";
-import { find } from "lodash-unified";
-import { getConfig } from "/@/config";
+import { getConfig } from "@/config";
 import { useRouter } from "vue-router";
 import panel from "../panel/index.vue";
-import { emitter } from "/@/utils/mitt";
+import { emitter } from "@/utils/mitt";
+import { resetRouter } from "@/router";
 import { templateRef } from "@vueuse/core";
-import { debounce } from "/@/utils/debounce";
-import { themeColorsType } from "../../types";
-import { useAppStoreHook } from "/@/store/modules/app";
-import { shadeBgColor } from "../../theme/element-plus";
-import { useEpThemeStoreHook } from "/@/store/modules/epTheme";
-import { storageLocal, storageSession } from "/@/utils/storage";
-import { useMultiTagsStoreHook } from "/@/store/modules/multiTags";
-import { createNewStyle, writeNewStyle } from "../../theme/element-plus";
+import { removeToken } from "@/utils/auth";
+import { routerArrays } from "@/layout/types";
+import { useNav } from "@/layout/hooks/useNav";
+import { useAppStoreHook } from "@/store/modules/app";
+import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
+import { useDataThemeChange } from "@/layout/hooks/useDataThemeChange";
+import {
+  useDark,
+  debounce,
+  useGlobal,
+  storageLocal,
+  storageSession
+} from "@pureadmin/utils";
 import { toggleTheme } from "@pureadmin/theme/dist/browser-utils";
 
-import dayIcon from "/@/assets/svg/day.svg?component";
-import darkIcon from "/@/assets/svg/dark.svg?component";
+import dayIcon from "@/assets/svg/day.svg?component";
+import darkIcon from "@/assets/svg/dark.svg?component";
 
 const router = useRouter();
+const { device } = useNav();
+const { isDark } = useDark();
 const { isSelect } = useCssModule();
-const body = document.documentElement as HTMLElement;
-const instance =
-  getCurrentInstance().appContext.app.config.globalProperties.$storage;
+const { $storage } = useGlobal<GlobalPropertiesApi>();
 
-const instanceConfig =
-  getCurrentInstance().appContext.app.config.globalProperties.$config;
-
-let themeColors = ref<Array<themeColorsType>>([
-  // 道奇蓝（默认）
-  { color: "#1b2a47", themeColor: "default" },
-  // 亮白色
-  { color: "#ffffff", themeColor: "light" },
-  // 猩红色
-  { color: "#f5222d", themeColor: "dusk" },
-  // 橙红色
-  { color: "#fa541c", themeColor: "volcano" },
-  // 金色
-  { color: "#fadb14", themeColor: "yellow" },
-  // 绿宝石
-  { color: "#13c2c2", themeColor: "mingQing" },
-  // 酸橙绿
-  { color: "#52c41a", themeColor: "auroraGreen" },
-  // 深粉色
-  { color: "#eb2f96", themeColor: "pink" },
-  // 深紫罗兰色
-  { color: "#722ed1", themeColor: "saucePurple" }
-]);
-
+const mixRef = templateRef<HTMLElement | null>("mixRef", null);
 const verticalRef = templateRef<HTMLElement | null>("verticalRef", null);
 const horizontalRef = templateRef<HTMLElement | null>("horizontalRef", null);
-const mixRef = templateRef<HTMLElement | null>("mixRef", null);
 
-let layoutTheme =
-  ref(storageLocal.getItem("responsive-layout")) ||
-  ref({
-    layout: instanceConfig?.Layout ?? "vertical",
-    theme: instanceConfig?.Theme ?? "default"
-  });
+const {
+  body,
+  dataTheme,
+  layoutTheme,
+  themeColors,
+  dataThemeChange,
+  setEpThemeColor,
+  setLayoutThemeColor
+} = useDataThemeChange();
 
-// body添加layout属性，作用于src/style/sidebar.scss
+/* body添加layout属性，作用于src/style/sidebar.scss */
 if (unref(layoutTheme)) {
-  let layout = unref(layoutTheme).layout;
-  let theme = unref(layoutTheme).theme;
+  const layout = unref(layoutTheme).layout;
+  const theme = unref(layoutTheme).theme;
   toggleTheme({
     scopeName: `layout-theme-${theme}`
   });
   setLayoutModel(layout);
 }
 
-// 默认灵动模式
-const markValue = ref(instance.configure?.showModel ?? "smart");
+/** 默认灵动模式 */
+const markValue = ref($storage.configure?.showModel ?? "smart");
 
-const logoVal = ref(instance.configure?.showLogo ?? true);
-
-const epThemeColor = ref(useEpThemeStoreHook().getEpThemeColor);
+const logoVal = ref($storage.configure?.showLogo ?? true);
 
 const settings = reactive({
-  greyVal: instance.configure.grey,
-  weakVal: instance.configure.weak,
-  tabsVal: instance.configure.hideTabs,
-  showLogo: instance.configure.showLogo,
-  showModel: instance.configure.showModel,
-  multiTagsCache: instance.configure.multiTagsCache
+  greyVal: $storage.configure.grey,
+  weakVal: $storage.configure.weak,
+  tabsVal: $storage.configure.hideTabs,
+  showLogo: $storage.configure.showLogo,
+  showModel: $storage.configure.showModel,
+  multiTagsCache: $storage.configure.multiTagsCache
 });
 
 const getThemeColorStyle = computed(() => {
@@ -101,10 +82,17 @@ const getThemeColorStyle = computed(() => {
   };
 });
 
+/** 当网页为暗黑模式时不显示亮白色切换选项 */
+const showThemeColors = computed(() => {
+  return themeColor => {
+    return themeColor === "light" && isDark.value ? false : true;
+  };
+});
+
 function storageConfigureChange<T>(key: string, val: T): void {
-  const storageConfigure = instance.configure;
+  const storageConfigure = $storage.configure;
   storageConfigure[key] = val;
-  instance.configure = storageConfigure;
+  $storage.configure = storageConfigure;
 }
 
 function toggleClass(flag: boolean, clsName: string, target?: HTMLElement) {
@@ -114,13 +102,13 @@ function toggleClass(flag: boolean, clsName: string, target?: HTMLElement) {
   targetEl.className = flag ? `${className} ${clsName} ` : className;
 }
 
-// 灰色模式设置
+/** 灰色模式设置 */
 const greyChange = (value): void => {
   toggleClass(settings.greyVal, "html-grey", document.querySelector("html"));
   storageConfigureChange("grey", value);
 };
 
-// 色弱模式设置
+/** 色弱模式设置 */
 const weekChange = (value): void => {
   toggleClass(
     settings.weakVal,
@@ -131,39 +119,31 @@ const weekChange = (value): void => {
 };
 
 const tagsChange = () => {
-  let showVal = settings.tabsVal;
+  const showVal = settings.tabsVal;
   storageConfigureChange("hideTabs", showVal);
-  emitter.emit("tagViewsChange", showVal);
+  emitter.emit("tagViewsChange", showVal as unknown as string);
 };
 
 const multiTagsCacheChange = () => {
-  let multiTagsCache = settings.multiTagsCache;
+  const multiTagsCache = settings.multiTagsCache;
   storageConfigureChange("multiTagsCache", multiTagsCache);
   useMultiTagsStoreHook().multiTagsCacheChange(multiTagsCache);
 };
 
-// 清空缓存并返回登录页
+/** 清空缓存并返回登录页 */
 function onReset() {
-  router.push("/login");
+  removeToken();
+  storageLocal.clear();
+  storageSession.clear();
   const { Grey, Weak, MultiTagsCache, EpThemeColor, Layout } = getConfig();
   useAppStoreHook().setLayout(Layout);
-  useEpThemeStoreHook().setEpThemeColor(EpThemeColor);
+  setEpThemeColor(EpThemeColor);
   useMultiTagsStoreHook().multiTagsCacheChange(MultiTagsCache);
   toggleClass(Grey, "html-grey", document.querySelector("html"));
   toggleClass(Weak, "html-weakness", document.querySelector("html"));
-  useMultiTagsStoreHook().handleTags("equal", [
-    {
-      path: "/welcome",
-      parentPath: "/",
-      meta: {
-        title: "menus.hshome",
-        icon: "home-filled",
-        i18n: true
-      }
-    }
-  ]);
-  storageLocal.clear();
-  storageSession.clear();
+  router.push("/login");
+  useMultiTagsStoreHook().handleTags("equal", [...routerArrays]);
+  resetRouter();
 }
 
 function onChange(label) {
@@ -171,7 +151,7 @@ function onChange(label) {
   emitter.emit("tagViewsShowModel", label);
 }
 
-// 侧边栏Logo
+/** 侧边栏Logo */
 function logoChange() {
   unref(logoVal)
     ? storageConfigureChange("showLogo", true)
@@ -185,7 +165,9 @@ function setFalse(Doms): any {
   });
 }
 
-watch(instance, ({ layout }) => {
+watch($storage, ({ layout }) => {
+  /* 设置wangeditorV5主题色 */
+  body.style.setProperty("--w-e-toolbar-active-color", layout["epThemeColor"]);
   switch (layout["layout"]) {
     case "vertical":
       toggleClass(true, isSelect, unref(verticalRef));
@@ -205,7 +187,7 @@ watch(instance, ({ layout }) => {
   }
 });
 
-// 主题色 激活选择项
+/** 主题色 激活选择项 */
 const getThemeColor = computed(() => {
   return current => {
     if (
@@ -224,83 +206,27 @@ const getThemeColor = computed(() => {
   };
 });
 
-// 设置导航模式
+/** 设置导航模式 */
 function setLayoutModel(layout: string) {
   layoutTheme.value.layout = layout;
   window.document.body.setAttribute("layout", layout);
-  instance.layout = {
+  $storage.layout = {
     layout,
     theme: layoutTheme.value.theme,
-    darkMode: instance.layout.darkMode,
-    sidebarStatus: instance.layout.sidebarStatus,
-    epThemeColor: instance.layout.epThemeColor
+    darkMode: $storage.layout?.darkMode,
+    sidebarStatus: $storage.layout?.sidebarStatus,
+    epThemeColor: $storage.layout?.epThemeColor
   };
   useAppStoreHook().setLayout(layout);
 }
 
-// 存放夜间主题切换前的导航主题色
-let tempLayoutThemeColor;
-
-// 设置导航主题色
-function setLayoutThemeColor(theme: string) {
-  tempLayoutThemeColor = instance.layout.theme;
-  layoutTheme.value.theme = theme;
-  toggleTheme({
-    scopeName: `layout-theme-${theme}`
-  });
-  instance.layout = {
-    layout: useAppStoreHook().layout,
-    theme,
-    darkMode: dataTheme.value,
-    sidebarStatus: instance.layout.sidebarStatus,
-    epThemeColor: instance.layout.epThemeColor
-  };
-
-  if (theme === "default" || theme === "light") {
-    setEpThemeColor(getConfig().EpThemeColor);
-  } else {
-    const colors = find(themeColors.value, { themeColor: theme });
-    setEpThemeColor(colors.color);
-  }
-}
-
-// 设置ep主题色
-const setEpThemeColor = (color: string) => {
-  // @ts-expect-error
-  writeNewStyle(createNewStyle(color));
-  useEpThemeStoreHook().setEpThemeColor(color);
-  body.style.setProperty("--el-color-primary-active", shadeBgColor(color));
-};
-
-let dataTheme = ref<boolean>(instance.layout.darkMode);
-
-// 日间、夜间主题切换
-function dataThemeChange() {
-  if (dataTheme.value) {
-    body.setAttribute("data-theme", "dark");
-    setLayoutThemeColor("light");
-  } else {
-    body.setAttribute("data-theme", "");
-    tempLayoutThemeColor && setLayoutThemeColor(tempLayoutThemeColor);
-    instance.layout = {
-      layout: useAppStoreHook().layout,
-      theme: instance.layout.theme,
-      darkMode: dataTheme.value,
-      sidebarStatus: instance.layout.sidebarStatus,
-      epThemeColor: instance.layout.epThemeColor
-    };
-  }
-}
-
-//初始化项目配置
+/* 初始化项目配置 */
 nextTick(() => {
   settings.greyVal &&
     document.querySelector("html")?.setAttribute("class", "html-grey");
   settings.weakVal &&
     document.querySelector("html")?.setAttribute("class", "html-weakness");
   settings.tabsVal && tagsChange();
-  // @ts-expect-error
-  writeNewStyle(createNewStyle(epThemeColor.value));
   dataThemeChange();
 });
 </script>
@@ -330,7 +256,12 @@ nextTick(() => {
         </li>
       </el-tooltip>
 
-      <el-tooltip class="item" content="顶部模式" placement="bottom">
+      <el-tooltip
+        v-if="device !== 'mobile'"
+        class="item"
+        content="顶部模式"
+        placement="bottom"
+      >
         <li
           :class="layoutTheme.layout === 'horizontal' ? $style.isSelect : ''"
           ref="horizontalRef"
@@ -341,7 +272,12 @@ nextTick(() => {
         </li>
       </el-tooltip>
 
-      <el-tooltip class="item" content="混合模式" placement="bottom">
+      <el-tooltip
+        v-if="device !== 'mobile'"
+        class="item"
+        content="混合模式"
+        placement="bottom"
+      >
         <li
           :class="layoutTheme.layout === 'mix' ? $style.isSelect : ''"
           ref="mixRef"
@@ -353,11 +289,12 @@ nextTick(() => {
       </el-tooltip>
     </ul>
 
-    <el-divider v-show="!dataTheme">主题色</el-divider>
-    <ul class="theme-color" v-show="!dataTheme">
+    <el-divider>主题色</el-divider>
+    <ul class="theme-color">
       <li
         v-for="(item, index) in themeColors"
         :key="index"
+        v-show="showThemeColors(item.themeColor)"
         :style="getThemeColorStyle(item.color)"
         @click="setLayoutThemeColor(item.themeColor)"
       >
@@ -373,8 +310,8 @@ nextTick(() => {
 
     <el-divider>界面显示</el-divider>
     <ul class="setting">
-      <li v-show="!dataTheme">
-        <span>灰色模式</span>
+      <li>
+        <span class="dark:text-white">灰色模式</span>
         <el-switch
           v-model="settings.greyVal"
           inline-prompt
@@ -384,8 +321,8 @@ nextTick(() => {
           @change="greyChange"
         />
       </li>
-      <li v-show="!dataTheme">
-        <span>色弱模式</span>
+      <li>
+        <span class="dark:text-white">色弱模式</span>
         <el-switch
           v-model="settings.weakVal"
           inline-prompt
@@ -396,7 +333,7 @@ nextTick(() => {
         />
       </li>
       <li>
-        <span>隐藏标签页</span>
+        <span class="dark:text-white">隐藏标签页</span>
         <el-switch
           v-model="settings.tabsVal"
           inline-prompt
@@ -407,7 +344,7 @@ nextTick(() => {
         />
       </li>
       <li>
-        <span>侧边栏Logo</span>
+        <span class="dark:text-white">侧边栏Logo</span>
         <el-switch
           v-model="logoVal"
           inline-prompt
@@ -420,7 +357,7 @@ nextTick(() => {
         />
       </li>
       <li>
-        <span>标签页持久化</span>
+        <span class="dark:text-white">标签页持久化</span>
         <el-switch
           v-model="settings.multiTagsCache"
           inline-prompt
@@ -432,7 +369,7 @@ nextTick(() => {
       </li>
 
       <li>
-        <span>标签风格</span>
+        <span class="dark:text-white">标签风格</span>
         <el-radio-group v-model="markValue" size="small" @change="onChange">
           <el-radio label="card">卡片</el-radio>
           <el-radio label="smart">灵动</el-radio>
@@ -452,8 +389,8 @@ nextTick(() => {
         height="15"
         style="margin-right: 4px"
       />
-      清空缓存并返回登录页</el-button
-    >
+      清空缓存并返回登录页
+    </el-button>
   </panel>
 </template>
 

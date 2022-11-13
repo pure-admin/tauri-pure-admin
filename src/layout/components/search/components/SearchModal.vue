@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import { useRouter } from "vue-router";
+import { cloneDeep } from "lodash-unified";
 import SearchResult from "./SearchResult.vue";
 import SearchFooter from "./SearchFooter.vue";
-import { deleteChildren } from "/@/utils/tree";
-import { transformI18n } from "/@/plugins/i18n";
+import { useNav } from "@/layout/hooks/useNav";
+import { deleteChildren } from "@pureadmin/utils";
 import { useDebounceFn, onKeyStroke } from "@vueuse/core";
 import { ref, watch, computed, nextTick, shallowRef } from "vue";
-import { usePermissionStoreHook } from "/@/store/modules/permission";
+import { usePermissionStoreHook } from "@/store/modules/permission";
 
 interface Props {
   /** 弹窗显隐 */
@@ -17,6 +18,7 @@ interface Emits {
   (e: "update:value", val: boolean): void;
 }
 
+const { device } = useNav();
 const emit = defineEmits<Emits>();
 const props = withDefaults(defineProps<Props>(), {});
 const router = useRouter();
@@ -29,7 +31,7 @@ const handleSearch = useDebounceFn(search, 300);
 
 /** 菜单树形结构 */
 const menusData = computed(() => {
-  return deleteChildren(usePermissionStoreHook().menusTree);
+  return deleteChildren(cloneDeep(usePermissionStoreHook().wholeMenus));
 });
 
 const show = computed({
@@ -68,7 +70,7 @@ function search() {
   resultOptions.value = flatMenusData.filter(
     menu =>
       keyword.value &&
-      transformI18n(menu.meta?.title, menu.meta?.i18n)
+      menu.meta?.title
         .toLocaleLowerCase()
         .includes(keyword.value.toLocaleLowerCase().trim())
   );
@@ -130,7 +132,12 @@ onKeyStroke("ArrowDown", handleDown);
 </script>
 
 <template>
-  <el-dialog top="5vh" v-model="show" :before-close="handleClose">
+  <el-dialog
+    top="5vh"
+    :width="device === 'mobile' ? '80vw' : '50vw'"
+    v-model="show"
+    :before-close="handleClose"
+  >
     <el-input
       ref="inputRef"
       v-model="keyword"

@@ -1,15 +1,17 @@
 {
   "recommendations": [
-    "voorjaar.windicss-intellisense",
+    "christian-kohler.path-intellisense",
     "vscode-icons-team.vscode-icons",
     "davidanson.vscode-markdownlint",
     "stylelint.vscode-stylelint",
+    "bradlc.vscode-tailwindcss",
     "dbaeumer.vscode-eslint",
     "esbenp.prettier-vscode",
-    "johnsoncodehk.volar",
-    "lokalise.i18n-ally",
+    "redhat.vscode-yaml",
+    "csstools.postcss",
     "mikestead.dotenv",
     "eamodio.gitlens",
-    "antfu.iconify"
+    "antfu.iconify",
+    "Vue.volar"
   ]
 }

@@ -5,6 +5,8 @@ import type {
   FunctionalComponent,
   PropType as VuePropType
 } from "vue";
+import type { ECharts } from "echarts";
+import { type ResponsiveStorage } from "./index";
 
 // GlobalComponents for Volar
 declare module "vue" {
@@ -12,6 +14,7 @@ declare module "vue" {
     IconifyIconOffline: typeof import("../src/components/ReIcon")["IconifyIconOffline"];
     IconifyIconOnline: typeof import("../src/components/ReIcon")["IconifyIconOnline"];
     FontIcon: typeof import("../src/components/ReIcon")["FontIcon"];
+    Auth: typeof import("../src/components/ReAuth")["Auth"];
   }
 }
 
@@ -71,13 +74,22 @@ declare global {
     __: unknown;
   }
 
+  type ViteCompression =
+    | "none"
+    | "gzip"
+    | "brotli"
+    | "both"
+    | "gzip-clear"
+    | "brotli-clear"
+    | "both-clear";
+
   declare interface ViteEnv {
     VITE_PORT: number;
     VITE_PUBLIC_PATH: string;
-    VITE_PROXY_DOMAIN: string;
-    VITE_PROXY_DOMAIN_REAL: string;
     VITE_ROUTER_HISTORY: string;
     VITE_LEGACY: boolean;
+    VITE_CDN: boolean;
+    VITE_COMPRESSION: ViteCompression;
   }
 
   declare interface ServerConfigs {
@@ -87,7 +99,6 @@ declare global {
     HiddenSideBar?: boolean;
     MultiTagsCache?: boolean;
     KeepAlive?: boolean;
-    Locale?: string;
     Layout?: string;
     Theme?: string;
     DarkMode?: boolean;
@@ -106,6 +117,12 @@ declare global {
         zoom?: number;
       };
     };
+  }
+
+  declare interface GlobalPropertiesApi {
+    $echarts: ECharts;
+    $storage: ResponsiveStorage;
+    $config: ServerConfigs;
   }
 
   function parseInt(s: string | number, radix?: number): number;

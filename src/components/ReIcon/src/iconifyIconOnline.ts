@@ -1,19 +1,14 @@
 import { h, defineComponent } from "vue";
 import { Icon as IconifyIcon } from "@iconify/vue";
 
-// Iconify Icon在Vue里在线使用（用于外网环境） https://docs.iconify.design/icon-components/vue/offline.html
+// Iconify Icon在Vue里在线使用（用于外网环境）
 export default defineComponent({
-  name: "IconifyIcon",
+  name: "IconifyIconOnline",
   components: { IconifyIcon },
   props: {
     icon: {
       type: String,
       default: ""
-    },
-    // default element plus icon
-    type: {
-      type: String,
-      default: "ep:"
     }
   },
   render() {
@@ -21,7 +16,10 @@ export default defineComponent({
     return h(
       IconifyIcon,
       {
-        icon: `${this.type}${this.icon}`,
+        icon: `${this.icon}`,
+        style: attrs?.style
+          ? Object.assign(attrs.style, { outline: "none" })
+          : { outline: "none" },
         ...attrs
       },
       {

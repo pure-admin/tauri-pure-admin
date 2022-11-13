@@ -1,8 +1,7 @@
-import { Directive } from "vue";
-import type { DirectiveBinding, VNode } from "vue";
+import { Directive, type DirectiveBinding, type VNode } from "vue";
 import elementResizeDetectorMaker from "element-resize-detector";
 import type { Erd } from "element-resize-detector";
-import { emitter } from "/@/utils/mitt";
+import { emitter } from "@/utils/mitt";
 
 const erd: Erd = elementResizeDetectorMaker({
   strategy: "scroll"

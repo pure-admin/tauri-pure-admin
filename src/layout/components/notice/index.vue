@@ -9,20 +9,19 @@ const dropdownDom = templateRef<ElRef | null>("dropdownDom", null);
 const activeName = ref(noticesData[0].name);
 const notices = ref(noticesData);
 
-let noticesNum = ref(0);
+const noticesNum = ref(0);
 notices.value.forEach(notice => {
   noticesNum.value += notice.list.length;
 });
 
 function tabClick() {
-  // @ts-expect-error
-  dropdownDom.value.handleOpen();
+  (dropdownDom as any).value.handleOpen();
 }
 </script>
 
 <template>
   <el-dropdown ref="dropdownDom" trigger="click" placement="bottom-end">
-    <span class="dropdown-badge">
+    <span class="dropdown-badge navbar-bg-hover select-none">
       <el-badge :value="noticesNum" :max="99">
         <span class="header-notice-icon">
           <IconifyIconOffline icon="bell" />

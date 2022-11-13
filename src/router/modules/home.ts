@@ -1,25 +1,23 @@
-import { $t } from "/@/plugins/i18n";
-const Layout = () => import("/@/layout/index.vue");
+import type { RouteConfigsTable } from "/#/index";
+const Layout = () => import("@/layout/index.vue");
 
-const homeRouter = {
+const homeRouter: RouteConfigsTable = {
   path: "/",
-  name: "home",
+  name: "Home",
   component: Layout,
   redirect: "/welcome",
   meta: {
     icon: "home-filled",
-    title: $t("menus.hshome"),
-    i18n: true,
+    title: "首页",
     rank: 0
   },
   children: [
     {
       path: "/welcome",
-      name: "welcome",
-      component: () => import("/@/views/welcome.vue"),
+      name: "Welcome",
+      component: () => import("@/views/welcome/index.vue"),
       meta: {
-        title: $t("menus.hshome"),
-        i18n: true
+        title: "首页"
       }
     }
   ]

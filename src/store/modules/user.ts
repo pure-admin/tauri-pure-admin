@@ -1,44 +1,52 @@
 import { defineStore } from "pinia";
-import { store } from "/@/store";
+import { store } from "@/store";
 import { userType } from "./types";
-import { router } from "/@/router";
-import { storageSession } from "/@/utils/storage";
-import { getLogin, refreshToken } from "/@/api/user";
-import { getToken, setToken, removeToken } from "/@/utils/auth";
-import { useMultiTagsStoreHook } from "/@/store/modules/multiTags";
-
-const data = getToken();
-let token = "";
-let name = "";
-if (data) {
-  const dataJson = JSON.parse(data);
-  if (dataJson) {
-    token = dataJson?.accessToken;
-    name = dataJson?.name ?? "admin";
-  }
-}
+import { routerArrays } from "@/layout/types";
+import { router, resetRouter } from "@/router";
+import { storageSession } from "@pureadmin/utils";
+import { getLogin, refreshTokenApi } from "@/api/user";
+import { UserResult, RefreshTokenResult } from "@/api/user";
+import { useMultiTagsStoreHook } from "@/store/modules/multiTags";
+import { type DataInfo, setToken, removeToken, sessionKey } from "@/utils/auth";
 
 export const useUserStore = defineStore({
   id: "pure-user",
   state: (): userType => ({
-    token,
-    name
+    // 用户名
+    username:
+      storageSession.getItem<DataInfo<number>>(sessionKey)?.username ?? "",
+    // 页面级别权限
+    roles: storageSession.getItem<DataInfo<number>>(sessionKey)?.roles ?? [],
+    // 前端生成的验证码（按实际需求替换）
+    verifyCode: "",
+    // 判断登录页面显示哪个组件（0：登录（默认）、1：手机登录、2：二维码登录、3：注册、4：忘记密码）
+    currentPage: 0
   }),
   actions: {
-    SET_TOKEN(token) {
-      this.token = token;
+    /** 存储用户名 */
+    SET_USERNAME(username: string) {
+      this.username = username;
     },
-    SET_NAME(name) {
-      this.name = name;
+    /** 存储角色 */
+    SET_ROLES(roles: Array<string>) {
+      this.roles = roles;
     },
-    // 登入
+    /** 存储前端生成的验证码 */
+    SET_VERIFYCODE(verifyCode: string) {
+      this.verifyCode = verifyCode;
+    },
+    /** 存储登录页面显示哪个组件 */
+    SET_CURRENTPAGE(value: number) {
+      this.currentPage = value;
+    },
+    /** 登入 */
     async loginByUsername(data) {
-      return new Promise<void>((resolve, reject) => {
+      return new Promise<UserResult>((resolve, reject) => {
         getLogin(data)
           .then(data => {
             if (data) {
-              setToken(data);
-              resolve();
+              setToken(data.data);
+              resolve(data);
             }
           })
           .catch(error => {
@@ -46,32 +54,28 @@ export const useUserStore = defineStore({
           });
       });
     },
-    // 登出 清空缓存
+    /** 前端登出（不调用接口） */
     logOut() {
-      this.token = "";
-      this.name = "";
+      this.username = "";
+      this.roles = [];
       removeToken();
-      storageSession.clear();
-      useMultiTagsStoreHook().handleTags("equal", [
-        {
-          path: "/welcome",
-          parentPath: "/",
-          meta: {
-            title: "menus.hshome",
-            icon: "home-filled",
-            i18n: true
-          }
-        }
-      ]);
       router.push("/login");
+      useMultiTagsStoreHook().handleTags("equal", [...routerArrays]);
+      resetRouter();
     },
-    // 刷新token
-    async refreshToken(data) {
-      return refreshToken(data).then(data => {
-        if (data) {
-          setToken(data);
-          return data;
-        }
+    /** 刷新`token` */
+    async handRefreshToken(data) {
+      return new Promise<RefreshTokenResult>((resolve, reject) => {
+        refreshTokenApi(data)
+          .then(data => {
+            if (data) {
+              setToken(data.data);
+              resolve(data);
+            }
+          })
+          .catch(error => {
+            reject(error);
+          });
       });
     }
   }

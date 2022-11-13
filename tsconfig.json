@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "Node",
     "strict": false,
     "jsx": "preserve",
     "importHelpers": true,
@@ -20,11 +20,18 @@
     "lib": ["dom", "esnext"],
     "incremental": true,
     "paths": {
-      "/@/*": ["src/*"],
+      "@/*": ["src/*"],
       "@build/*": ["build/*"],
       "/#/*": ["types/*"]
     },
-    "types": ["node", "vite/client", "element-plus/global"],
+    "types": [
+      "node",
+      "vite/client",
+      "element-plus/global",
+      "@pureadmin/table/volar",
+      "@pureadmin/descriptions/volar",
+      "unplugin-vue-macros/macros-global"
+    ],
     "typeRoots": ["./node_modules/@types/", "./types"]
   },
   "include": [
@@ -35,5 +42,5 @@
     "mock/*.ts",
     "vite.config.ts"
   ],
-  "exclude": ["node_modules", "dist", "**/*.js"]
+  "exclude": ["node_modules", "dist", "**/*.js", "index.html"]
 }
