@@ -3,6 +3,7 @@
 **中文** | [English](./README.en-US.md)
 
 - [tauri-pure-admin](https://github.com/xiaoxian521/tauri-pure-admin) 是在 [pure-admin-thin](https://github.com/xiaoxian521/pure-admin-thin) 的基础上开发
+- 当然平台还提供 `electron` 版本的 [electron-pure-admin](https://github.com/xiaoxian521/electron-pure-admin)
 
 ### 安装依赖
 

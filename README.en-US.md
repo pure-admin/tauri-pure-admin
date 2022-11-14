@@ -3,6 +3,7 @@
 **English** | [中文](./README.md)
 
 - [tauri-pure-admin](https://github.com/xiaoxian521/tauri-pure-admin) is based on [pure-admin-thin](https://github.com/xiaoxian521/pure-admin-thin) based on the development.
+- Of course, the platform also provides the `electron` version of [electron-pure-admin](https://github.com/xiaoxian521/electron-pure-admin)
 
 ### Install dependencies
 
