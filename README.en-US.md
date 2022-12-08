@@ -9,6 +9,10 @@
 
 - `pnpm install`
 
+### Initialization
+
+- `pnpm tauri` (press enter all the way)
+
 ### start up
 
 - `pnpm tauri:dev`

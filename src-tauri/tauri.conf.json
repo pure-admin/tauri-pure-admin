@@ -7,7 +7,7 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "pure-admin-thin",
+    "productName": "tauri-pure-admin",
     "version": "0.1.0"
   },
   "tauri": {
@@ -58,7 +58,7 @@
         "fullscreen": false,
         "height": 600,
         "resizable": true,
-        "title": "pure-admin-thin",
+        "title": "tauri-pure-admin",
         "width": 800
       }
     ]

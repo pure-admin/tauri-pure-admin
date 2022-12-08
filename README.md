@@ -9,6 +9,10 @@
 
 - `pnpm install`
 
+### 初始化
+
+- `pnpm tauri` （一路回车即可）
+
 ### 启动
 
 - `pnpm tauri:dev`
