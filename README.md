@@ -7,19 +7,40 @@
 
 ### 安装依赖
 
-- `pnpm install`
+```sh
+pnpm install
+```
 
 ### 初始化
 
-- `pnpm tauri` （一路回车即可）
+```sh
+# 一路回车即可
+pnpm tauri
+```
 
 ### 启动
 
-- `pnpm tauri:dev`
+```sh
+# 桌面端
+pnpm tauri:dev
+```
+
+```sh
+# 浏览器端
+pnpm dev
+```
 
 ### 打包
 
-- `pnpm tauri:build`
+```sh
+# 桌面端
+pnpm tauri:build
+```
+
+```sh
+# 浏览器端
+pnpm build
+```
 
 ### 资料
 

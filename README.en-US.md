@@ -7,19 +7,40 @@
 
 ### Install dependencies
 
-- `pnpm install`
+```sh
+pnpm install
+```
 
 ### Initialization
 
-- `pnpm tauri` (press enter all the way)
+```sh
+# press enter all the way
+pnpm tauri
+```
 
 ### start up
 
-- `pnpm tauri:dev`
+```sh
+# Desktop
+pnpm tauri:dev
+```
+
+```sh
+# Browser
+pnpm dev
+```
 
 ### Pack
 
-- `pnpm tauri:build`
+```sh
+# Desktop
+pnpm tauri:build
+```
+
+```sh
+# Browser
+pnpm build
+```
 
 ### material
 
