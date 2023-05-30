@@ -5,6 +5,10 @@
 - [tauri-pure-admin](https://github.com/xiaoxian521/tauri-pure-admin) is based on [pure-admin-thin](https://github.com/xiaoxian521/pure-admin-thin) based on the development.
 - Of course, the platform also provides the `electron` version of [electron-pure-admin](https://github.com/xiaoxian521/electron-pure-admin)
 
+<p align="center">
+  <img alt="electron" width="100%" src="https://yiming_chang.gitee.io/pure-admin-doc/img/tauri/1.jpg">
+</p>
+
 ### Install dependencies
 
 ```sh
@@ -51,5 +55,6 @@ pnpm tauri:icon
 
 ### material
 
-- `tauri` is stronger than `electron`, [recommended documentation](https://www.cnblogs.com/Grewer/p/12789261.html)
+- The performance and package size of `tauri` are much better than `electron`, but the ecology of `electron` is stronger, which means that it is convenient and fast to develop. At present, it is recommended to use `electron` to develop desktop applications [recommended Document](https://www.cnblogs.com/Grewer/p/12789261.html)
+- When you plan to use `tauri` to develop desktop applications, you must first have a certain [rust](https://www.rust-lang.org/) language foundation
 - If `tauri` is not installed, please read the documentation [tauri](https://tauri.app/)

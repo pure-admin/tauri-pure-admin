@@ -5,6 +5,10 @@
 - [tauri-pure-admin](https://github.com/xiaoxian521/tauri-pure-admin) 是在 [pure-admin-thin](https://github.com/xiaoxian521/pure-admin-thin) 的基础上开发
 - 当然平台还提供 `electron` 版本的 [electron-pure-admin](https://github.com/xiaoxian521/electron-pure-admin)
 
+<p align="center">
+  <img alt="electron" width="100%" src="https://yiming_chang.gitee.io/pure-admin-doc/img/tauri/1.jpg">
+</p>
+
 ### 安装依赖
 
 ```sh
@@ -51,5 +55,6 @@ pnpm tauri:icon
 
 ### 资料
 
-- `tauri` 比 `electron` 更强，[推荐文档](https://www.cnblogs.com/Grewer/p/12789261.html)
+- `tauri` 的性能和打包大小要远优于 `electron` ，但 `electron` 的生态更强，生态强意味着开发起来方便快捷，目前还是推荐使用 `electron` 去开发桌面端应用程序 [推荐文档](https://www.cnblogs.com/Grewer/p/12789261.html)
+- 当您打算完全使用 `tauri` 去开发桌面端应用程序时，首先要具备一定的 [rust](https://www.rust-lang.org/zh-CN/) 语言基础
 - 如果没有安装 `tauri`，请阅读文档 [tauri](https://tauri.app/zh/)
