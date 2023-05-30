@@ -24,7 +24,8 @@
     "preinstall": "npx only-allow pnpm",
     "tauri": "tauri init",
     "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build"
+    "tauri:build": "tauri build",
+    "tauri:icon": "tauri icon public/app-icon.png"
   },
   "browserslist": [
     "> 1%",

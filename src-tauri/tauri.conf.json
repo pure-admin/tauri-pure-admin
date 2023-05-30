@@ -7,8 +7,8 @@
     "distDir": "../dist"
   },
   "package": {
-    "productName": "tauri-pure-admin",
-    "version": "0.1.0"
+    "productName": "后台管理系统",
+    "version": "../package.json"
   },
   "tauri": {
     "allowlist": {
@@ -56,10 +56,10 @@
     "windows": [
       {
         "fullscreen": false,
-        "height": 600,
+        "height": 768,
         "resizable": true,
-        "title": "tauri-pure-admin",
-        "width": 800
+        "title": "后台管理系统",
+        "width": 1024
       }
     ]
   }

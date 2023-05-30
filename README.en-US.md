@@ -42,6 +42,13 @@ pnpm tauri:build
 pnpm build
 ```
 
+### Icon Generation
+
+```sh
+# Modify the app-icon.png icon under the public folder to the actual project icon, the format is 1024x1024px png, and then execute the following command to generate icons for all platforms with one click and put them in the src-tauri/icons folder
+pnpm tauri:icon
+```
+
 ### material
 
 - `tauri` is stronger than `electron`, [recommended documentation](https://www.cnblogs.com/Grewer/p/12789261.html)

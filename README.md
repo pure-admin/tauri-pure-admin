@@ -42,6 +42,13 @@ pnpm tauri:build
 pnpm build
 ```
 
+### 图标生成
+
+```sh
+# 修改public文件夹下的app-icon.png图标为实际项目图标，格式为1024x1024px的png，然后执行下面的命令即可一键生成所有平台的icon并放在src-tauri/icons文件夹中
+pnpm tauri:icon
+```
+
 ### 资料
 
 - `tauri` 比 `electron` 更强，[推荐文档](https://www.cnblogs.com/Grewer/p/12789261.html)
