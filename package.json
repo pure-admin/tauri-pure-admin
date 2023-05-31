@@ -3,9 +3,13 @@
   "version": "4.1.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS=--max-old-space-size=4096 vite",
+    "tauri": "tauri",
+    "dev": "tauri dev",
     "serve": "pnpm dev",
-    "build": "rimraf dist && NODE_OPTIONS=--max-old-space-size=8192 vite build",
+    "build": "tauri build",
+    "icon": "tauri icon public/app-icon.png",
+    "browser:dev": "NODE_OPTIONS=--max-old-space-size=4096 vite",
+    "browser:build": "rimraf dist && NODE_OPTIONS=--max-old-space-size=8192 vite build",
     "build:staging": "rimraf dist && vite build --mode staging",
     "report": "rimraf dist && vite build",
     "preview": "vite preview",
@@ -21,11 +25,7 @@
     "lint:pretty": "pretty-quick --staged",
     "lint": "pnpm lint:eslint && pnpm lint:prettier && pnpm lint:stylelint",
     "prepare": "husky install",
-    "preinstall": "npx only-allow pnpm",
-    "tauri": "tauri init",
-    "tauri:dev": "tauri dev",
-    "tauri:build": "tauri build",
-    "tauri:icon": "tauri icon public/app-icon.png"
+    "preinstall": "npx only-allow pnpm"
   },
   "browserslist": [
     "> 1%",

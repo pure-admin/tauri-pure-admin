@@ -1,11 +1,11 @@
 [package]
-name = "后台管理系统"
+name = "tauri-pure-admin"
 version = "4.1.0"
 description = "tauri-pure-admin"
 authors = ["pure-admin"]
 license = "MIT"
 repository = "https://github.com/pure-admin/tauri-pure-admin"
-default-run = "后台管理系统"
+default-run = "tauri-pure-admin"
 edition = "2021"
 rust-version = "1.59"
 

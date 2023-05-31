@@ -15,42 +15,35 @@
 pnpm install
 ```
 
-### Initialization
-
-```sh
-# press enter all the way
-pnpm tauri
-```
-
 ### start up
 
 ```sh
 # Desktop
-pnpm tauri:dev
+pnpm dev
 ```
 
 ```sh
 # Browser
-pnpm dev
+pnpm browser:dev
 ```
 
 ### Pack
 
 ```sh
 # Desktop
-pnpm tauri:build
+pnpm build
 ```
 
 ```sh
 # Browser
-pnpm build
+pnpm browser:build
 ```
 
 ### Icon Generation
 
 ```sh
 # Modify the app-icon.png icon under the public folder to the actual project icon, the format is 1024x1024px png, and then execute the following command to generate icons for all platforms with one click and put them in the src-tauri/icons folder
-pnpm tauri:icon
+pnpm icon
 ```
 
 ### material

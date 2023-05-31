@@ -3187,7 +3187,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "后台管理系统"
+name = "tauri-pure-admin"
 version = "4.1.0"
 dependencies = [
  "serde",

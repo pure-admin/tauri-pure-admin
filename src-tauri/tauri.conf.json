@@ -1,27 +1,28 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "build": {
-    "beforeBuildCommand": "npm run build",
-    "beforeDevCommand": "npm run dev",
+    "beforeDevCommand": "pnpm browser:dev",
+    "beforeBuildCommand": "pnpm browser:build",
     "devPath": "http://localhost:8080",
     "distDir": "../dist"
   },
   "package": {
-    "productName": "后台管理系统",
+    "productName": "tauri-pure-admin",
     "version": "../package.json"
   },
   "tauri": {
-    "allowlist": {
-      "all": false
-    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 768,
+        "resizable": true,
+        "title": "tauri-pure-admin",
+        "width": 1024
+      }
+    ],
     "bundle": {
       "active": true,
-      "category": "DeveloperTool",
-      "copyright": "",
-      "deb": {
-        "depends": []
-      },
-      "externalBin": [],
+      "targets": ["dmg", "deb", "appimage", "msi"],
       "icon": [
         "icons/32x32.png",
         "icons/128x128.png",
@@ -29,8 +30,9 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
+      "copyright": "Copyright © 2020-present, pure-admin",
+      "category": "DeveloperTool",
       "identifier": "com.tauri.pure",
-      "longDescription": "",
       "macOS": {
         "entitlements": null,
         "exceptionDomain": "",
@@ -38,14 +40,18 @@
         "providerShortName": null,
         "signingIdentity": null
       },
-      "resources": [],
-      "shortDescription": "",
-      "targets": "all",
       "windows": {
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",
         "timestampUrl": ""
-      }
+      },
+      "deb": {
+        "depends": []
+      },
+      "externalBin": [],
+      "longDescription": "",
+      "resources": [],
+      "shortDescription": ""
     },
     "security": {
       "csp": null
@@ -53,14 +59,10 @@
     "updater": {
       "active": false
     },
-    "windows": [
-      {
-        "fullscreen": false,
-        "height": 768,
-        "resizable": true,
-        "title": "后台管理系统",
-        "width": 1024
+    "allowlist": {
+      "shell": {
+        "open": true
       }
-    ]
+    }
   }
 }
