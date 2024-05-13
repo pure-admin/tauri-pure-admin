@@ -1,3 +1,7 @@
+# 5.5.0 (2024-05-13)
+
+https://github.com/pure-admin/vue-pure-admin/releases/tag/v5.5.0
+
 # 4.1.0 (2023-05-31)
 
 ### 🎫 Feat

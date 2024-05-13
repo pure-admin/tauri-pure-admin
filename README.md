@@ -6,7 +6,7 @@
 - 当然平台还提供 `electron` 版本的 [electron-pure-admin](https://github.com/xiaoxian521/electron-pure-admin)
 
 <p align="center">
-  <img alt="electron" width="100%" src="https://yiming_chang.gitee.io/pure-admin-doc/img/tauri/1.jpg">
+  <img alt="electron" width="100%" src="https://xiaoxian521.github.io/hyperlink/img/tauri-pure-admin/1.jpg">
 </p>
 
 ### 安装依赖

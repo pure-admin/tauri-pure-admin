@@ -41,6 +41,10 @@ type DeepPartial<T> = {
   [P in keyof T]?: DeepPartial<T[P]>;
 };
 
+type Without<T, U> = { [P in Exclude<keyof T, keyof U>]?: never };
+
+type Exclusive<T, U> = (Without<T, U> & U) | (Without<U, T> & T);
+
 type TimeoutHandle = ReturnType<typeof setTimeout>;
 
 type IntervalHandle = ReturnType<typeof setInterval>;
@@ -71,6 +75,8 @@ interface ComponentElRef<T extends HTMLElement = HTMLDivElement> {
   $el: T;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function parseInt(s: string | number, radix?: number): number;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function parseFloat(string: string | number): number;
