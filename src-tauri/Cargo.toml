@@ -1,6 +1,6 @@
 [package]
 name = "tauri-pure-admin"
-version = "5.5.0"
+version = "5.6.0"
 description = "tauri-pure-admin"
 authors = ["pure-admin"]
 license = "MIT"
