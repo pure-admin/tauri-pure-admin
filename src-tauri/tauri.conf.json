@@ -3,66 +3,61 @@
   "build": {
     "beforeDevCommand": "pnpm browser:dev",
     "beforeBuildCommand": "pnpm browser:build",
-    "devPath": "http://localhost:8080",
-    "distDir": "../dist"
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:8080"
   },
-  "package": {
-    "productName": "tauri-pure-admin",
-    "version": "../package.json"
+  "bundle": {
+    "active": true,
+    "targets": ["dmg", "deb", "appimage", "msi"],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "copyright": "Copyright © 2020-present, pure-admin",
+    "category": "DeveloperTool",
+    "shortDescription": "",
+    "macOS": {
+      "entitlements": null,
+      "exceptionDomain": "",
+      "frameworks": [],
+      "providerShortName": null,
+      "signingIdentity": null
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": ""
+    },
+    "resources": [],
+    "externalBin": [],
+    "longDescription": "",
+    "linux": {
+      "deb": {
+        "depends": []
+      }
+    }
   },
-  "tauri": {
+  "productName": "tauri-pure-admin",
+  "mainBinaryName": "tauri-pure-admin",
+  "version": "../package.json",
+  "identifier": "com.tauri.pure",
+  "plugins": {},
+  "app": {
     "windows": [
       {
         "fullscreen": false,
         "height": 768,
         "resizable": true,
         "title": "tauri-pure-admin",
-        "width": 1024
+        "width": 1024,
+        "useHttpsScheme": true
       }
     ],
-    "bundle": {
-      "active": true,
-      "targets": ["dmg", "deb", "appimage", "msi"],
-      "icon": [
-        "icons/32x32.png",
-        "icons/128x128.png",
-        "icons/128x128@2x.png",
-        "icons/icon.icns",
-        "icons/icon.ico"
-      ],
-      "copyright": "Copyright © 2020-present, pure-admin",
-      "category": "DeveloperTool",
-      "identifier": "com.tauri.pure",
-      "macOS": {
-        "entitlements": null,
-        "exceptionDomain": "",
-        "frameworks": [],
-        "providerShortName": null,
-        "signingIdentity": null
-      },
-      "windows": {
-        "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampUrl": ""
-      },
-      "deb": {
-        "depends": []
-      },
-      "externalBin": [],
-      "longDescription": "",
-      "resources": [],
-      "shortDescription": ""
-    },
     "security": {
       "csp": null
-    },
-    "updater": {
-      "active": false
-    },
-    "allowlist": {
-      "shell": {
-        "open": true
-      }
     }
   }
 }

@@ -7,6 +7,8 @@
 
 <p align="center">
   <img alt="electron" width="100%" src="https://xiaoxian521.github.io/hyperlink/img/tauri-pure-admin/1.jpg">
+  <br />
+  <img alt="electron" width="100%" src="https://xiaoxian521.github.io/hyperlink/img/tauri-pure-admin/2.jpg">
 </p>
 
 ### 安装依赖
@@ -50,4 +52,4 @@ pnpm icon
 
 - `tauri` 的性能和打包大小要远优于 `electron` ，但 `electron` 的生态更强，生态强意味着开发起来方便快捷，目前还是推荐使用 `electron` 去开发桌面端应用程序 [推荐文档](https://www.cnblogs.com/Grewer/p/12789261.html)
 - 当您打算完全使用 `tauri` 去开发桌面端应用程序时，首先要具备一定的 [rust](https://www.rust-lang.org/zh-CN/) 语言基础
-- 如果没有安装 `tauri`，请阅读文档 [tauri](https://tauri.app/zh/)
+- 如果没有安装 `tauri`，请阅读文档 [tauri](https://tauri.app/zh-cn/)
