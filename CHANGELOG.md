@@ -1,3 +1,7 @@
+# 6.0.0 (2025-04-25)
+
+https://github.com/pure-admin/vue-pure-admin/releases/tag/v6.0.0
+
 # 5.9.0 (2024-12-12)
 
 - 升级到`tauri 2`
